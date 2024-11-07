@@ -8,25 +8,25 @@ The initial structure is provided on the GitHub repository already linked. The c
 > The first task is to implement the protocol for anonymous transmission of a classical bit. The protocol is described in the Quantum Anonymous Transmissions paper (see page 10).
 > For convenience, an image with the protocol definition, anonymous transmission classical bit.png is included in this repository. In this protocol, d represents the bit being transmitted anonymously.
 > To complete this goal, implement the protocol in the anonymous_transmit_bit method within application.py. The provided template and helper properties, like next_node_name, prev_node_name, next_socket, etc., that will assist you.
-### Task 2️⃣: 
+### Task 2️⃣: Transmit a Byte Anonymously
 > Extend the application to transmit a byte (8 bits) anonymously. Additionally:
 > Record the time the application takes to complete.
 > In the run method, return both the received byte (or sent byte for the sender) and the completion time.
-### Task 3️⃣:
+### Task 3️⃣: Measure Success Probability and Transmission Speed
 > Now, calculate the average success probability and transmission speed in bytes per second.
 > You can use the num_times parameter in the run method of run_simulation.py to run multiple simulations and gather data to compute these averages.
-### Task 4️⃣:
+### Task 4️⃣: Add Error Correction with Repetition Code
 > Implement a basic form of error correction using a Repetition code of length 3. Add an option to enable error correction in your application and apply the repetition code for transmitting a single bit anonymously.
-### Task 5️⃣:
+### Task 5️⃣: Completing the challenge
 > To complete the challenge:
 > Configure a Noisy Network:
-> Modify config.yaml to match the noisy network configuration settings as described below.
-> Complete the run_simulation.py script.
+>   Modify config.yaml to match the noisy network configuration settings as described below.
+>   Complete the run_simulation.py script.
 > Update run_simulation.py
 > Execute the application in the noisy network both with and without error correction.
 > For each configuration:
-> Run the simulation at least 100 times to create reliable results.
-> Calculate and print Average Success Probability and Average Transmission Speed.
+>   Run the simulation at least 100 times to create reliable results.
+>   Calculate and print Average Success Probability and Average Transmission Speed.
 
 
 
