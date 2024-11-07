@@ -6,8 +6,6 @@ Firstly, I've read all the documentation and watched the provided [tutorials abo
 The initial structure is provided on the GitHub repository already linked. The challenge is divided in tasks. 
 ### Task 1️⃣:
 > The first task is to implement the protocol for anonymous transmission of a classical bit. The protocol is described in the Quantum Anonymous Transmissions paper (see page 10).
-
 > For convenience, an image with the protocol definition, anonymous transmission classical bit.png is included in this repository. In this protocol, d represents the bit being transmitted anonymously.
-
 > To complete this goal, implement the protocol in the anonymous_transmit_bit method within application.py. The provided template and helper properties, like next_node_name, prev_node_name, next_socket, etc., that will assist you.
 
