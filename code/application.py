@@ -1,7 +1,6 @@
 from copy import copy
 from typing import Optional, Generator
-
-from squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
+from squidasm.squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
 from netqasm.sdk.classical_communication.socket import Socket
 from netqasm.sdk.epr_socket import EPRSocket
 
