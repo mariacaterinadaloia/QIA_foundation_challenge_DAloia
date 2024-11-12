@@ -1,7 +1,7 @@
 from copy import copy
 from typing import Optional, Generator
 
-from netqasm.runtime.interface.config import Qubit
+from netqasm.sdk import Qubit
 
 from squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
 from netqasm.sdk.classical_communication.socket import Socket
@@ -74,29 +74,29 @@ class AnonymousTransmissionProgram(Program):
         In the README.md you can find the logic behind! 
         '''
         #Initial state
-
+        connection = context.connection
         if send_bit:
-            qubit1 =  self.next_epr_socket.create_keep()[0]
-            measurement = qubit1.measure()
-            yield from context.connection.flush()
+            q = Qubit(connection)
+            q.H()
+            measurement = q.measure()
+            yield from connection.flush()
             self.broadcast_message(context, f"{measurement}")
             if measurement == 0:
                 return False
             else:
                 return True
-        '''
         else:
             msg = yield from self.prev_socket.recv()
+            self.broadcast_message(context, msg)
             if "0" in msg:
                 return False
             elif "1" in msg:
                 return True
-        '''
 
 
 
         #end code
-        yield from context.connection.flush()
+        yield from connection.flush()
         print("altri")
         return False
         
