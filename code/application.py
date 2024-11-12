@@ -1,11 +1,14 @@
-from copy import copy
+from copy import copy, deepcopy
 from typing import Optional, Generator
 
 from netqasm.sdk import Qubit
+from netqasm.sdk.toolbox import set_qubit_state
 
 from squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
 from netqasm.sdk.classical_communication.socket import Socket
 from netqasm.sdk.epr_socket import EPRSocket
+
+from netsquid.util.simtools import sim_time, MILLISECOND
 
 
 class AnonymousTransmissionProgram(Program):
@@ -74,34 +77,54 @@ class AnonymousTransmissionProgram(Program):
         #Step 1: shared state
         connection = context.connection
         if send_bit:
-            q1 = Qubit(connection)
-            q1.H()
-            q2 = Qubit(connection)
-            q1.cnot(q2)
-            measurement = q1.measure()
+            '''
+            qubits = [Qubit(connection) for _ in range(2)]
+            qubits[0].H()
+            qubits[0].cnot(qubits[1])
+            '''
+            d = self.create_super_state(connection)
+
+            shared = d.measure()
+            yield from connection.flush() 
+            
+            self.broadcast_message(context, str(shared))
+            q = Qubit(connection)
+            if shared == 1: 
+                print("yessaaa")
+                #set the qubit state to zero (should be the default)
+                q.reset()
+                #set the qubit to one using 
+                q.X()
+                #Alice applies the Pauli-Z Gate
+                q.Z()
+            else: 
+                print("not")
+            src = q.measure()
             yield from connection.flush()
-            self.broadcast_message(context, f"{measurement}")
-            if measurement == 1:
-                return True
-            else:
-                return False
+            return src == 1
         else:
             msg = yield from self.prev_socket.recv()
             self.broadcast_message(context, msg)
-            if '1' in msg:
-                return True
-            else:
-                return False
-
+            return '1' in msg
+                
 
         #end code
         yield from connection.flush()
         return False
         
-
+    def create_super_state(self, connection):
+        qubits = [Qubit(connection) for _ in range(2)]
+        for i in range(2): 
+            set_qubit_state(qubits[i])
+        qubits[0].H()
+        qubits[0].cnot(qubits[1])
+        return qubits[0]    
+            
+        
     def broadcast_message(self, context: ProgramContext, message: str):
-        """Broadcasts a message to all nodes in the network."""
+        """Broadcasts a message to all nodes in the network."""        
         for remote_node_name in self.remote_node_names:
+        
             socket = context.csockets[remote_node_name]
             socket.send(message)
 
