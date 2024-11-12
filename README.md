@@ -8,6 +8,33 @@ The initial structure is provided on the GitHub repository already linked. The c
 > The first task is to implement the protocol for anonymous transmission of a classical bit. The protocol is described in the Quantum Anonymous Transmissions paper (see page 10).
 > For convenience, an image with the protocol definition, anonymous transmission classical bit.png is included in this repository. In this protocol, d represents the bit being transmitted anonymously.
 > To complete this goal, implement the protocol in the anonymous_transmit_bit method within application.py. The provided template and helper properties, like next_node_name, prev_node_name, next_socket, etc., that will assist you.
+
+I firstly divided the code into 5 steps:
+
+#### **Implementation Steps for ANON(d)**
+
+1. **Prerequisite: Prepare Shared State**
+   Generate and distribute the entangled state \((|0^n\rangle + |1^n\rangle) / \sqrt{2}\) among all participants (including Alice).
+
+2. **Alice's Phase Flip Operation**
+   - Alice sets her bit \(d\).
+   - If \(d = 1\), she applies the phase flip \(\sigma_z\) (Pauli-Z gate) to her part of the entangled state.
+   - If \(d = 0\), she does nothing.
+
+3. **Each Participant's Operations (Including Alice)**
+     - Applies a Hadamard transform to their qubit.
+     - Measures their qubit in the computational (Z) basis.
+     - Broadcasts their measurement result (either '0' or '1') to all other participants.
+
+4. **Counting and Conclusion**
+   - All participants collect the broadcasted measurement results.
+   - Count the total number of '1's, denoted as \(k\).
+   - If \(k\) is even, conclude that \(d = 0\); if \(k\) is odd, conclude that \(d = 1\).
+
+5. **Error Handling (Optional)**
+   If any participant fails to broadcast their result, handle this as an error condition (though in your setup, the abort condition is not required, so this step may be omitted in your implementation).
+
+Each step involves distinct quantum and communication operations, so you may want to implement them as separate functions or subroutines in your code to ensure modularity and readability. Let me know if you need further assistance with any specific step or coding details!
 ### Task 2️⃣: Transmit a Byte Anonymously
 > Extend the application to transmit a byte (8 bits) anonymously. Additionally:
 > Record the time the application takes to complete.
