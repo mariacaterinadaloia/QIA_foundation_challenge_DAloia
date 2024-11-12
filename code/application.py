@@ -65,39 +65,37 @@ class AnonymousTransmissionProgram(Program):
         :param send_bit: Bit to be sent by the sender node; receivers should leave this as None.
         :return: The bit received through the protocol, or the sent bit if this node is the sender.
         """
-        # Placeholder for the anonymous transmission protocol logic, put your code here.
-        # This code makes the current code runnable; replace it with your actual protocol steps.
         #Start code
         '''
-        To make the programming more simple, i divided the protocol into steps, 
+        To make the development easier, i divided the protocol into steps, 
         they will be specified throughout the entire code. 
         In the README.md you can find the logic behind! 
         '''
-        #Initial state
+        #Step 1: shared state
         connection = context.connection
         if send_bit:
-            q = Qubit(connection)
-            q.H()
-            measurement = q.measure()
+            q1 = Qubit(connection)
+            q1.H()
+            q2 = Qubit(connection)
+            q1.cnot(q2)
+            measurement = q1.measure()
             yield from connection.flush()
             self.broadcast_message(context, f"{measurement}")
-            if measurement == 0:
-                return False
-            else:
+            if measurement == 1:
                 return True
+            else:
+                return False
         else:
             msg = yield from self.prev_socket.recv()
             self.broadcast_message(context, msg)
-            if "0" in msg:
-                return False
-            elif "1" in msg:
+            if '1' in msg:
                 return True
-
+            else:
+                return False
 
 
         #end code
         yield from connection.flush()
-        print("altri")
         return False
         
 
