@@ -1,5 +1,8 @@
 from copy import copy
 from typing import Optional, Generator
+
+from netqasm.runtime.interface.config import Qubit
+
 from squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
 from netqasm.sdk.classical_communication.socket import Socket
 from netqasm.sdk.epr_socket import EPRSocket
@@ -17,7 +20,7 @@ class AnonymousTransmissionProgram(Program):
         self.node_name = node_name
         self.send_bit = send_bit
 
-        # Find what nodes are next and prev based on the node_names list
+        # Find what nodes are next and prev based on the node_names l ist
         node_index = node_names.index(node_name)
         self.next_node_name = node_names[node_index+1] if node_index + 1 < len(node_names) else None
         self.prev_node_name = node_names[node_index-1] if node_index - 1 >= 0 else None
@@ -62,15 +65,37 @@ class AnonymousTransmissionProgram(Program):
         :param send_bit: Bit to be sent by the sender node; receivers should leave this as None.
         :return: The bit received through the protocol, or the sent bit if this node is the sender.
         """
-        if send_bit: 
-            qubit1 = self.next_epr_socket.create_keep()[0]
+        # Placeholder for the anonymous transmission protocol logic, put your code here.
+        # This code makes the current code runnable; replace it with your actual protocol steps.
+        #Start code
+        '''
+        To make the programming more simple, i divided the protocol into steps, 
+        they will be specified throughout the entire code. 
+        In the README.md you can find the logic behind! 
+        '''
+        #Initial state
+
+        if send_bit:
+            qubit1 =  self.next_epr_socket.create_keep()[0]
             measurement = qubit1.measure()
             yield from context.connection.flush()
-            if measurement == 1:
-                return True
-            else: 
+            self.broadcast_message(context, f"{measurement}")
+            if measurement == 0:
                 return False
-            
+            else:
+                return True
+        '''
+        else:
+            msg = yield from self.prev_socket.recv()
+            if "0" in msg:
+                return False
+            elif "1" in msg:
+                return True
+        '''
+
+
+
+        #end code
         yield from context.connection.flush()
         print("altri")
         return False

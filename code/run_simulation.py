@@ -2,8 +2,11 @@ from application import AnonymousTransmissionProgram
 
 from squidasm.run.stack.config import StackNetworkConfig
 from squidasm.run.stack.run import run
+from squidasm.util.util import create_two_node_network
 
 nodes = ["Alice", "Bob", "Charlie", "David"]
+
+create_two_node_network()
 
 # import network configuration from file
 cfg = StackNetworkConfig.from_file("config.yaml")
