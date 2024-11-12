@@ -10,7 +10,6 @@ The initial structure is provided on the GitHub repository already linked. The c
 > To complete this goal, implement the protocol in the anonymous_transmit_bit method within application.py. The provided template and helper properties, like next_node_name, prev_node_name, next_socket, etc., that will assist you.
 
 I firstly divided the code into 5 steps:
- Here’s a breakdown of the protocol into steps for implementation, based on your previous notes and the image you provided:
 
 #### **Implementation Steps for ANON(d)**
 
