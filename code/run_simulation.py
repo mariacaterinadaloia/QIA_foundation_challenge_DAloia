@@ -1,7 +1,7 @@
 from application import AnonymousTransmissionProgram
 
-from squidasm.squidasm.run.stack.config import StackNetworkConfig
-from squidasm.squidasm.run.stack.run import run
+from squidasm.run.stack.config import StackNetworkConfig
+from squidasm.run.stack.run import run
 
 nodes = ["Alice", "Bob", "Charlie", "David"]
 

@@ -1,6 +1,6 @@
 from copy import copy
 from typing import Optional, Generator
-from squidasm.squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
+from squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
 from netqasm.sdk.classical_communication.socket import Socket
 from netqasm.sdk.epr_socket import EPRSocket
 
@@ -62,10 +62,19 @@ class AnonymousTransmissionProgram(Program):
         :param send_bit: Bit to be sent by the sender node; receivers should leave this as None.
         :return: The bit received through the protocol, or the sent bit if this node is the sender.
         """
-        # Placeholder for the anonymous transmission protocol logic, put your code here.
-        # This code makes the current code runnable; replace it with your actual protocol steps.
+        if send_bit: 
+            qubit1 = self.next_epr_socket.create_keep()[0]
+            measurement = qubit1.measure()
+            yield from context.connection.flush()
+            if measurement == 1:
+                return True
+            else: 
+                return False
+            
         yield from context.connection.flush()
+        print("altri")
         return False
+        
 
     def broadcast_message(self, context: ProgramContext, message: str):
         """Broadcasts a message to all nodes in the network."""
