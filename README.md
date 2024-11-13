@@ -30,11 +30,6 @@ I firstly divided the code into 5 steps:
    - All participants collect the broadcasted measurement results.
    - Count the total number of '1's, denoted as \(k\).
    - If \(k\) is even, conclude that \(d = 0\); if \(k\) is odd, conclude that \(d = 1\).
-
-5. **Error Handling (Optional)**
-   If any participant fails to broadcast their result, handle this as an error condition (though in your setup, the abort condition is not required, so this step may be omitted in your implementation).
-
-Each step involves distinct quantum and communication operations, so you may want to implement them as separate functions or subroutines in your code to ensure modularity and readability. Let me know if you need further assistance with any specific step or coding details!
 ### Task 2️⃣: Transmit a Byte Anonymously
 > Extend the application to transmit a byte (8 bits) anonymously. Additionally:
 > Record the time the application takes to complete.
