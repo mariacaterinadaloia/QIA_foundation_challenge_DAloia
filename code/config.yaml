@@ -1,7 +1,7 @@
 # A network of four nodes connected in a line that connects Alice to Bob, Bob to Charlie and Charlie to David.
 # This network configuration has no noise.
 generic_qdevice_cfg: &generic_qdevice_cfg
-    num_qubits: 2
+    num_qubits: 8
     # coherence times (The value 0 disables decoherence)
     T1: 500_000_000
     T2: 500_000_000
@@ -63,11 +63,18 @@ links:
 clinks:
   - stack1: Alice
     stack2: Bob
-    typ: instant
+    typ: default
+    cfg:
+      delay: 0.05
+
   - stack1: Bob
     stack2: Charlie
-    typ: instant
+    typ: default
+    cfg:
+      delay: 0.05
 
   - stack1: Charlie
     stack2: David
-    typ: instant
+    typ: default
+    cfg:
+      delay: 0.05
