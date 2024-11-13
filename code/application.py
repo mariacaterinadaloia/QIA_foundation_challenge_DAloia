@@ -8,6 +8,7 @@ from netqasm.sdk.qubit import QubitMeasureBasis
 from squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
 from netqasm.sdk.classical_communication.socket import Socket
 from netqasm.sdk.epr_socket import EPRSocket
+from netqasm.sdk.classical_communication.message import StructuredMessage
 
 from netsquid.util.simtools import sim_time, MILLISECOND
 
@@ -80,15 +81,9 @@ class AnonymousTransmissionProgram(Program):
         
         if send_bit:
             #Step 1: shared state
-            #d = self.create_super_state(connection)
-
-            
-            #d = self.next_epr_socket.create_keep()[0]
-            #shared = d.measure()
-            shared =1
+            d = self.create_super_state(connection)
+            shared = d.measure()
             yield from connection.flush()
-            
-            
             
             q = Qubit(connection)
             #Step 2: Alice applies Pauli-Z if the condition is met
@@ -131,11 +126,8 @@ class AnonymousTransmissionProgram(Program):
             src = q.measure(basis=QubitMeasureBasis.Z)
             
             yield from connection.flush()
-            '''
-            u.reset()
-            if src == 1: 
-                u.X()
-                '''
+            
+            sc = StructuredMessage()
             #broadcast 
             self.broadcast_message(context, str(src))
             msg = yield from self.prev_socket.recv()
@@ -161,9 +153,9 @@ class AnonymousTransmissionProgram(Program):
     def broadcast_message(self, context: ProgramContext, message: str):
         """Broadcasts a message to all nodes in the network."""        
         for remote_node_name in self.remote_node_names:
-        
             socket = context.csockets[remote_node_name]
             socket.send(message)
+             
 
     def setup_next_and_prev_sockets(self, context: ProgramContext):
         """Initializes next and prev sockets using the given context."""
