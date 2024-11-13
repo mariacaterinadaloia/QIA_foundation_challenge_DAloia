@@ -14,29 +14,58 @@ I firstly divided the code into 5 steps:
 #### **Implementation Steps for ANON(d)**
 
 1. **Prerequisite: Prepare Shared State**
-   Generate and distribute the entangled state \((|0^n\rangle + |1^n\rangle) / \sqrt{2}\) among all participants (including Alice).
+   Generate and distribute the entangled state $(|0^n\rangle + |1^n\rangle) / \sqrt{2}$ among all participants (including Alice).
+   I used a GHZ state using function 
+
+   `create_ghz(
+            connection,
+            self.prev_epr_socket,
+            self.next_epr_socket,
+            self.prev_socket,
+            self.next_socket,
+            do_corrections=True,
+        )`
+   
+
+   A **GHZ state** (named after Greenberger, Horne, and Zeilinger) is a special type of entangled state in quantum mechanics that involves three or more qubits. It is represented as a superposition of states where **all qubits are either in the $ |0\rangle $ state or all in the $ |1\rangle $ state**.
+   For three qubits, the GHZ state is written as:
+
+   
+   $|\text{GHZ}\rangle = \frac{1}{\sqrt{2}}(|000\rangle + |111\rangle)$
+   
+
+   This state means that each qubit is entangled with the others in such a way that, when one qubit is measured, the measurement result immediately determines the state of the other qubits. For example, if you measure one qubit and get a 0, then you know the other qubits are also in the 0 state. Similarly, if you measure a 1, all other qubits will also be in the 1 state.
+   For **n** qubits, the GHZ state generalizes to:
+
+   $ |\text{GHZ}\rangle = \frac{1}{\sqrt{2}}(|0\rangle^{\otimes n} + |1\rangle^{\otimes n}) $
+
+   This state can be used to create strongly correlated outcomes across multiple qubits and is fundamental in tests of quantum nonlocality and for quantum protocols requiring synchronized behavior.
 
 2. **Alice's Phase Flip Operation**
-   - Alice sets her bit \(d\).
-   - If \(d = 1\), she applies the phase flip \(\sigma_z\) (Pauli-Z gate) to her part of the entangled state.
-   - If \(d = 0\), she does nothing.
+   - Alice sets her bit $d$.
+   - If $d = 1$, she applies the phase flip $\sigma_z$ (Pauli-Z gate) to her part of the entangled state.
+   - If $d = 0$, she does nothing.
 
 3. **Each Participant's Operations (Including Alice)**
      - Applies a Hadamard transform to their qubit.
-     - Measures their qubit in the computational (Z) basis.
+     - Measures their qubit in the computational $Z$ basis.
      - Broadcasts their measurement result (either '0' or '1') to all other participants.
 
 4. **Counting and Conclusion**
    - All participants collect the broadcasted measurement results.
-   - Count the total number of '1's, denoted as \(k\).
-   - If \(k\) is even, conclude that \(d = 0\); if \(k\) is odd, conclude that \(d = 1\).
+   - Count the total number of '1's, denoted as $k$.
+   - If $k$ is even, conclude that $d = 0$; if $k$ is odd, conclude that $d = 1$.
 ### Task 2️⃣: Transmit a Byte Anonymously
 > Extend the application to transmit a byte (8 bits) anonymously. Additionally:
 > Record the time the application takes to complete.
 > In the run method, return both the received byte (or sent byte for the sender) and the completion time.
+
+I created `application_onebit.py` and  `config_onebit.yaml` to distinguish between the one bit and one byte implementations.
+I 
 ### Task 3️⃣: Measure Success Probability and Transmission Speed
 > Now, calculate the average success probability and transmission speed in bytes per second.
 > You can use the num_times parameter in the run method of run_simulation.py to run multiple simulations and gather data to compute these averages.
+
 ### Task 4️⃣: Add Error Correction with Repetition Code
 > Implement a basic form of error correction using a Repetition code of length 3. Add an option to enable error correction in your application and apply the repetition code for transmitting a single bit anonymously.
 ### Task 5️⃣: Completing the challenge
