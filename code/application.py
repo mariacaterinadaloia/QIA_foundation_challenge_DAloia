@@ -3,10 +3,12 @@ from typing import Optional, Generator
 
 from netqasm.sdk import Qubit
 from netqasm.sdk.toolbox import set_qubit_state
+from netqasm.sdk.qubit import QubitMeasureBasis
 
 from squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
 from netqasm.sdk.classical_communication.socket import Socket
 from netqasm.sdk.epr_socket import EPRSocket
+from netqasm.sdk.classical_communication.message import StructuredMessage
 
 from netsquid.util.simtools import sim_time, MILLISECOND
 
@@ -76,36 +78,63 @@ class AnonymousTransmissionProgram(Program):
         '''
         #Step 1: shared state
         connection = context.connection
+        
         if send_bit:
-            '''
-            qubits = [Qubit(connection) for _ in range(2)]
-            qubits[0].H()
-            qubits[0].cnot(qubits[1])
-            '''
+            #Step 1: shared state
             d = self.create_super_state(connection)
-
             shared = d.measure()
-            yield from connection.flush() 
+            yield from connection.flush()
             
-            self.broadcast_message(context, str(shared))
             q = Qubit(connection)
+            #Step 2: Alice applies Pauli-Z if the condition is met
             if shared == 1: 
-                print("yessaaa")
                 #set the qubit state to zero (should be the default)
                 q.reset()
                 #set the qubit to one using 
                 q.X()
                 #Alice applies the Pauli-Z Gate
                 q.Z()
-            else: 
-                print("not")
-            src = q.measure()
+
+            #step 3: what everybody ha to do
+            #every player applies the hadamard port 
+            q.H()
+            #every player has to measure in computational basis (should be the default, but we like to specify)
+            src = q.measure(basis=QubitMeasureBasis.Z)
             yield from connection.flush()
-            return src == 1
+            #broadcast 
+            self.broadcast_message(context, str(src))
+            #step 4: count occurences
+            
+            #returns d, as defined in the protocol (2.5)
+            return str(src).count('1') % 2 == 0
+        
+        
+        #This code is for Bob, Charlie and David
         else:
+            '''
+            idea per domani: prendi la misurazione da next socket
+            se funzionasse il broadcast, e dovrebbe, il dato è già lì!
+            '''
+            #q = yield from self.prev_epr_socket.recv_keep()
+            #if self.next_epr_socket is not None:
+                #u = self.next_epr_socket.create_keep()[0]
+            #every player applies the hadamard port 
+            q = Qubit(connection)
+            
+            q.H()
+            #every player has to measure in computational basis (should be the default, but we like to specify)
+            src = q.measure(basis=QubitMeasureBasis.Z)
+            
+            yield from connection.flush()
+            
+            sc = StructuredMessage()
+            #broadcast 
+            self.broadcast_message(context, str(src))
             msg = yield from self.prev_socket.recv()
-            self.broadcast_message(context, msg)
-            return '1' in msg
+            
+            return msg.join(str(src)).count('1') % 2 == 0
+            
+            
                 
 
         #end code
@@ -124,9 +153,9 @@ class AnonymousTransmissionProgram(Program):
     def broadcast_message(self, context: ProgramContext, message: str):
         """Broadcasts a message to all nodes in the network."""        
         for remote_node_name in self.remote_node_names:
-        
             socket = context.csockets[remote_node_name]
             socket.send(message)
+             
 
     def setup_next_and_prev_sockets(self, context: ProgramContext):
         """Initializes next and prev sockets using the given context."""
