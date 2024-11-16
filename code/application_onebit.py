@@ -1,17 +1,16 @@
 from copy import copy, deepcopy
+from random import random
 from typing import Optional, Generator
 
 from netqasm.sdk import Qubit
 from netqasm.sdk.toolbox import set_qubit_state
 from netqasm.sdk.qubit import QubitMeasureBasis
-from numpy.lib.stride_tricks import broadcast_to
 
 from squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
 from netqasm.sdk.classical_communication.socket import Socket
 from netqasm.sdk.epr_socket import EPRSocket
 from squidasm.util.routines import create_ghz
 
-from netsquid.util.simtools import sim_time, MILLISECOND
 
 
 class AnonymousTransmissionProgram(Program):
@@ -93,27 +92,25 @@ class AnonymousTransmissionProgram(Program):
 
         #if Alice
         if send_bit:
-            shared = q.measure()
+            shared = random.choice([0,1])
             #Step 2: Alice applies Pauli-Z if the condition is met
-            yield from connection.flush()
-            #qubit test
-            q_t = Qubit(connection)
+
             if shared == 1:
                 # set the qubit state to zero (should be the default)
-                q_t.reset()
+                q.reset()
                 #set the qubit to one using 
-                q_t.X()
+                q.X()
                 #Alice applies the Pauli-Z Gate
-                q_t.Z()
+                q.Z()
                 print("yes")
             else:
-                q_t.reset()
+                q.reset()
                 print("no")
             #Step 3: what everybody ha to do
             #every player applies the hadamard port 
-            q_t.H()
+            q.H()
             #every player has to measure in computational basis (should be the default, but we like to specify)
-            src = q_t.measure(basis=QubitMeasureBasis.Z)
+            src = q.measure(basis=QubitMeasureBasis.Z)
             yield from connection.flush()
             #broadcast
 
@@ -121,7 +118,7 @@ class AnonymousTransmissionProgram(Program):
             #step 4: count occurences
             
             #returns d, as defined in the protocol (2.5)
-            return str(src).count('1') % 2 == 0
+            return str(src).count('1') % 2 != 0
         
         
         #This code is for Bob, Charlie and David
@@ -137,22 +134,8 @@ class AnonymousTransmissionProgram(Program):
             msg = str(msg) + "" + str(src)
             self.broadcast_message(context, msg) #str(src)))
 
-            return msg.count('1') % 2 == 0
+            return msg.count('1') % 2 != 0
 
-
-    def broadcast_shared_state(self, num_qbits = 2):
-        epr = []
-        qbits = []
-        for remote_node_name in self.remote_node_names:
-            epr.append(EPRSocket(remote_node_name))
-
-    def create_super_state(self, connection):
-        qubits = [Qubit(connection) for _ in range(2)]
-        for i in range(2): 
-            set_qubit_state(qubits[i])
-        qubits[0].H()
-        qubits[0].cnot(qubits[1])
-        return qubits[0]    
             
         
     def broadcast_message(self, context: ProgramContext, message: str):
