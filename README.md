@@ -37,7 +37,7 @@ I firstly divided the code into 5 steps:
    This state means that each qubit is entangled with the others in such a way that, when one qubit is measured, the measurement result immediately determines the state of the other qubits. For example, if you measure one qubit and get a 0, then you know the other qubits are also in the 0 state. Similarly, if you measure a 1, all other qubits will also be in the 1 state.
    For **n** qubits, the GHZ state generalizes to:
 
-   $ |\text{GHZ}\rangle = \frac{1}{\sqrt{2}}(|0\rangle^{\otimes n} + |1\rangle^{\otimes n}) $
+   $|\text{GHZ}\rangle = \frac{1}{\sqrt{2}}(|0\rangle^{\otimes n} + |1\rangle^{\otimes n}) $
 
    This state can be used to create strongly correlated outcomes across multiple qubits and is fundamental in tests of quantum nonlocality and for quantum protocols requiring synchronized behavior.
 
