@@ -2,6 +2,7 @@ from copy import copy, deepcopy
 from typing import Optional, Generator
 
 from netqasm.sdk import Qubit
+from netqasm.sdk.classical_communication.message import StructuredMessage
 from netqasm.sdk.toolbox import set_qubit_state
 from netqasm.sdk.qubit import QubitMeasureBasis
 import random
@@ -66,7 +67,7 @@ class AnonymousTransmissionProgram(Program):
 
     def anonymous_transmit_bit(self, context: ProgramContext, send_bit: bool = None) -> Generator[None, None, bool]:
         """
-        Anonymously transmits a bit to other nodes in the network as part of the protocol.
+        Anonymously transmits a byte to other nodes in the network as part of the protocol.
 
         :param context: The program's execution context.
         :param send_bit: Bit to be sent by the sender node; receivers should leave this as None.
@@ -83,7 +84,8 @@ class AnonymousTransmissionProgram(Program):
         #creating a GHZ state
         final = ""
 
-        for i in range(1):
+        for i in range(8):
+            print(f"inter{i} e {self.node_name}")
             q, m = yield from create_ghz(
                 connection,
                 self.prev_epr_socket,
@@ -94,6 +96,7 @@ class AnonymousTransmissionProgram(Program):
             )
 
             yield from connection.flush()
+            msg = StructuredMessage("1","")
             #if Alice
             if send_bit:
                 shared = random.choice([0,1])
@@ -101,43 +104,39 @@ class AnonymousTransmissionProgram(Program):
                 if shared == 1:
                     #Alice applies the Pauli-Z Gate
                     q.Z()
-                #Step 3: what everybody ha to do
-                #every player applies the hadamard port
-                q.H()
-                #every player has to measure in computational basis (should be the default, but we like to specify)
-                src = q.measure(basis=QubitMeasureBasis.Z)
-                yield from connection.flush()
-                #broadcast
-                self.broadcast_message(context, str(src))
-                print(src)
-                #step 4: count occurences
+            #Step 3: what everybody ha to do
+            #applies the hadamard port to the shared state
+            q.H()
+            # every player has to measure in computational basis (should be the default, but we like to specify)
+            src = q.measure(basis=QubitMeasureBasis.Z)
+            yield from connection.flush()
+            #broadcast
 
-                #returns d, as defined in the protocol (2.5)
-                if src == 1:
-                    final = final + "1"
-                else:
-                    final = final + "0"
-                #This code is for Bob, Charlie and David
-            else:
-                #applies the hadamard port to the shared state
-                q.H()
-                #every player has to measure in computational basis (should be the default, but we like to specify)
-                src = q.measure(basis=QubitMeasureBasis.Z)
-                yield from connection.flush()
-                #broadcast
-
+            if self.prev_socket is not None:
                 msg = yield from self.prev_socket.recv()
-                msg = str(msg) + "" + str(src)
-                self.broadcast_message(context, msg)
-                print(msg)
-                if str(src).count('1') % 2 != 0:
-                    final = final + "1"
-                else:
-                    final = final + "0"
+                if str(i) not in msg.header:
+                    while True:
+                        msg = yield from self.prev_socket.recv()
+                        if str(i) in msg.header:
+                            break
+
+            msg_str = str(msg.payload) + str(src)
+
+            if str(msg_str).count('1') % 2 != 0:
+                final = final + "1"
+            else:
+                final = final + "0"
+            print(f"msg{msg_str}")
+
+            if self.next_socket is not None:
+                self.broadcast_message(context, StructuredMessage(str(i), msg_str))
+            else:
+                self.broadcast_message(context, StructuredMessage(str(i+1), ""))
+
 
         return final
         
-    def broadcast_message(self, context: ProgramContext, message: str):
+    def broadcast_message(self, context: ProgramContext, message: StructuredMessage):
         """Broadcasts a message to all nodes in the network."""        
         for remote_node_name in self.remote_node_names:
             socket = context.csockets[remote_node_name]

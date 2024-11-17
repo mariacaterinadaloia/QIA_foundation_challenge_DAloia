@@ -96,45 +96,24 @@ class AnonymousTransmissionProgram(Program):
             #Step 2: Alice applies Pauli-Z if the condition is met
 
             if shared == 1:
-                # set the qubit state to zero (should be the default)
-                q.reset()
-                #set the qubit to one using 
-                q.X()
                 #Alice applies the Pauli-Z Gate
                 q.Z()
-                print("yes")
             else:
                 q.reset()
-                print("no")
-            #Step 3: what everybody ha to do
-            #every player applies the hadamard port 
-            q.H()
-            #every player has to measure in computational basis (should be the default, but we like to specify)
-            src = q.measure(basis=QubitMeasureBasis.Z)
-            yield from connection.flush()
-            #broadcast
-
-            self.broadcast_message(context, str(src))
-            #step 4: count occurences
+        #Step 3: what everybody ha to do
+        q.H()
+        #every player has to measure in computational basis (should be the default, but we like to specify)
+        src = q.measure(basis=QubitMeasureBasis.Z)
             
-            #returns d, as defined in the protocol (2.5)
-            return str(src).count('1') % 2 != 0
-        
-        
-        #This code is for Bob, Charlie and David
-        else:
-            q.H()
-            #every player has to measure in computational basis (should be the default, but we like to specify)
-            src = q.measure(basis=QubitMeasureBasis.Z)
-            
-            yield from connection.flush()
+        yield from connection.flush()
 
-            #broadcast
+        #broadcast
+        if self.prev_socket is not None:
             msg = yield from self.prev_socket.recv()
-            msg = str(msg) + "" + str(src)
-            self.broadcast_message(context, msg) #str(src)))
+        msg = str(msg) + "" + str(src)
+        self.broadcast_message(context, msg) #str(src)))
 
-            return msg.count('1') % 2 != 0
+        return msg.count('1') % 2 != 0
 
             
         
