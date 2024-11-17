@@ -126,6 +126,7 @@ class AnonymousTransmissionProgram(Program):
                 yield from connection.flush()
                 #broadcast
 
+                
                 msg = yield from self.prev_socket.recv()
                 msg = str(msg) + "" + str(src)
                 self.broadcast_message(context, msg)
