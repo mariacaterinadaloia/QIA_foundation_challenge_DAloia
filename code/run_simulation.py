@@ -22,7 +22,7 @@ bob_program = AnonymousTransmissionProgram(node_name="Bob", node_names=nodes, re
 charlie_program = AnonymousTransmissionProgram(node_name="Charlie", node_names=nodes, repetition_code=True)
 david_program = AnonymousTransmissionProgram(node_name="David", node_names=nodes, repetition_code=True)
 
-num_times = 1
+num_times = 100
 for i in range(num_times):
     # Run the simulation. Programs argument is a mapping of network node labels to programs to run on that node
     run(config=cfg, programs={"Alice": alice_program, "Bob": bob_program,

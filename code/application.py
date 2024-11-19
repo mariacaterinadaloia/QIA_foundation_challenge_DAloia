@@ -82,6 +82,7 @@ class AnonymousTransmissionProgram(Program):
         they will be specified throughout the entire code. 
         In the README.md you can find the logic behind! 
         '''
+        self.final = ""
         #Step 1: shared state
         connection = context.connection
         #creating a GHZ state
@@ -110,8 +111,10 @@ class AnonymousTransmissionProgram(Program):
             # every player has to measure in computational basis (should be the default, but we like to specify)
             src = q.measure(basis=QubitMeasureBasis.Z)
             yield from connection.flush()
+
             #broadcast
             msg = StructuredMessage(str(i), "")
+
             if self.prev_socket is not None:
                 msg = yield from self.prev_socket.recv()
                 if str(i) not in msg.header:
@@ -127,7 +130,7 @@ class AnonymousTransmissionProgram(Program):
                 if self.next_socket is not None:
                     self.broadcast_message(context, StructuredMessage(str(i), msg_str))
                 else:
-                    self.broadcast_message(context, StructuredMessage(str(i), str(src)))
+                    self.broadcast_message(context, StructuredMessage(str(i), ""))
 
                 self.final = self.final + self.repetition_code_func(msg)
 
@@ -135,7 +138,7 @@ class AnonymousTransmissionProgram(Program):
                 if self.next_socket is not None:
                     self.broadcast_message(context, StructuredMessage(str(i), msg_str))
                 else:
-                    self.broadcast_message(context, StructuredMessage(str(i), str(src)))
+                    self.broadcast_message(context, StructuredMessage(str(i), ""))
 
                 if str(msg_str).count('1') % 2 != 0:
                     self.final = self.final + "1"
