@@ -111,7 +111,7 @@ class AnonymousTransmissionProgram(Program):
         if self.prev_socket is not None:
             msg = yield from self.prev_socket.recv()
         msg = str(msg) + "" + str(src)
-        self.broadcast_message(context, msg) #str(src)))
+        self.broadcast_message(context, msg)
 
         return msg.count('1') % 2 != 0
 

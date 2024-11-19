@@ -66,8 +66,12 @@ I
 > Now, calculate the average success probability and transmission speed in bytes per second.
 > You can use the num_times parameter in the run method of run_simulation.py to run multiple simulations and gather data to compute these averages.
 
+$ Average-success-probability = (\frac{bit-sended-right} {total-bits}) * 100 $
+$ Transmission-Speed = mean(sim-times) $
 ### Task 4️⃣: Add Error Correction with Repetition Code
 > Implement a basic form of error correction using a Repetition code of length 3. Add an option to enable error correction in your application and apply the repetition code for transmitting a single bit anonymously.
+
+Basically, we replicate the bit sended three times (for bit $1$ we do $111$), and then we calculate the most recurring bit in a group of three bits.
 ### Task 5️⃣: Completing the challenge
 > To complete the challenge:
 > Configure a Noisy Network:
@@ -79,5 +83,6 @@ I
 >   Run the simulation at least 100 times to create reliable results.
 >   Calculate and print Average Success Probability and Average Transmission Speed.
 
+I saved two log files with the average success probability and sim_time, so you'll be able to see the different results
 
 

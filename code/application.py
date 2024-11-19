@@ -1,23 +1,23 @@
 from copy import copy, deepcopy
 from typing import Optional, Generator
 
+
 from netqasm.sdk import Qubit
 from netqasm.sdk.classical_communication.message import StructuredMessage
 from netqasm.sdk.toolbox import set_qubit_state
 from netqasm.sdk.qubit import QubitMeasureBasis
 import random
 
-from numpy.lib.function_base import append
 from squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
 from netqasm.sdk.classical_communication.socket import Socket
 from netqasm.sdk.epr_socket import EPRSocket
 from squidasm.util.routines import create_ghz
 
-from netsquid.util.simtools import sim_time
+from netsquid.util.simtools import sim_time, SECOND
 
 
 class AnonymousTransmissionProgram(Program):
-    def __init__(self, node_name: str, node_names: list, send_bit: bool = None):
+    def __init__(self, node_name: str, node_names: list, send_bit: bool = None, repetition_code = False):
         """
         Initializes the AnonymousTransmissionProgram.
 
@@ -25,6 +25,8 @@ class AnonymousTransmissionProgram(Program):
         :param node_names: List of all node names in the network, in sequence.
         :param send_bit: The bit to be transmitted; set to None for nodes that are not the sender.
         """
+        self.simtime = None
+        self.final = ""
         self.node_name = node_name
         self.send_bit = send_bit
 
@@ -62,10 +64,11 @@ class AnonymousTransmissionProgram(Program):
         # Run the anonymous transmission protocol and retrieve the received bit
         received_byte = yield from self.anonymous_transmit_bit(context, self.send_bit)
 
-        print(f"{self.node_name} has received the bit: {received_byte} at {sim_time()}")
+        print(f"{self.node_name} has received the bit: {received_byte}")
+        self.simtime = sim_time(SECOND)
         return {}
 
-    def anonymous_transmit_bit(self, context: ProgramContext, send_bit: bool = None) -> Generator[None, None, bool]:
+    def anonymous_transmit_bit(self, context: ProgramContext, send_bit: bool = None, repetition_code = False) -> Generator[None, None, bool]:
         """
         Anonymously transmits a byte to other nodes in the network as part of the protocol.
 
@@ -82,10 +85,8 @@ class AnonymousTransmissionProgram(Program):
         #Step 1: shared state
         connection = context.connection
         #creating a GHZ state
-        final = ""
 
         for i in range(8):
-            print(f"inter{i} e {self.node_name}")
             q, m = yield from create_ghz(
                 connection,
                 self.prev_epr_socket,
@@ -96,7 +97,6 @@ class AnonymousTransmissionProgram(Program):
             )
 
             yield from connection.flush()
-            msg = StructuredMessage("1","")
             #if Alice
             if send_bit:
                 shared = random.choice([0,1])
@@ -111,7 +111,7 @@ class AnonymousTransmissionProgram(Program):
             src = q.measure(basis=QubitMeasureBasis.Z)
             yield from connection.flush()
             #broadcast
-
+            msg = StructuredMessage(str(i), "")
             if self.prev_socket is not None:
                 msg = yield from self.prev_socket.recv()
                 if str(i) not in msg.header:
@@ -122,20 +122,43 @@ class AnonymousTransmissionProgram(Program):
 
             msg_str = str(msg.payload) + str(src)
 
-            if str(msg_str).count('1') % 2 != 0:
-                final = final + "1"
+            if repetition_code:
+                _, msg_str = self.repetition_code_func(msg.payload, src)
+                if self.next_socket is not None:
+                    self.broadcast_message(context, StructuredMessage(str(i), msg_str))
+                else:
+                    self.broadcast_message(context, StructuredMessage(str(i), str(src)))
+
+                self.final = self.final + self.repetition_code_func(msg)
+
             else:
-                final = final + "0"
-            print(f"msg{msg_str}")
+                if self.next_socket is not None:
+                    self.broadcast_message(context, StructuredMessage(str(i), msg_str))
+                else:
+                    self.broadcast_message(context, StructuredMessage(str(i), str(src)))
 
-            if self.next_socket is not None:
-                self.broadcast_message(context, StructuredMessage(str(i), msg_str))
+                if str(msg_str).count('1') % 2 != 0:
+                    self.final = self.final + "1"
+                else:
+                    self.final = self.final + "0"
+
+        return self.final
+
+    def repetition_code_func(self, input_string, src = None):
+        result_string = ""
+        for i in range(0, len(input_string), 3):
+            group = input_string[i:i + 3]
+
+            count_ones = group.count('1')
+
+            if count_ones >= 2:
+                result_string += "1"
             else:
-                self.broadcast_message(context, StructuredMessage(str(i+1), ""))
+                result_string += "0"
+        if src is not None:
+            to_send = input_string + str(src) + str(src) + str(src)
+        return result_string, to_send
 
-
-        return final
-        
     def broadcast_message(self, context: ProgramContext, message: StructuredMessage):
         """Broadcasts a message to all nodes in the network."""        
         for remote_node_name in self.remote_node_names:

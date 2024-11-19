@@ -1,22 +1,49 @@
+from numpy import mean
+
 from application import AnonymousTransmissionProgram
 
 from squidasm.run.stack.config import StackNetworkConfig
 from squidasm.run.stack.run import run
-from squidasm.util.util import create_two_node_network
 
+#log_file = "simulation.log"
+#for error correction enabled
+log_file = "simulation_correction.log"
+# Open the file in write mode to clear its content
+with open(log_file, "w") as f:
+    pass  # Opening in "w" mode clears the file
 nodes = ["Alice", "Bob", "Charlie", "David"]
-
-create_two_node_network()
 
 # import network configuration from file
 cfg = StackNetworkConfig.from_file("config.yaml")
 
 # Create instances of programs to run
-alice_program = AnonymousTransmissionProgram(node_name="Alice", node_names=nodes, send_bit=True)
-bob_program = AnonymousTransmissionProgram(node_name="Bob", node_names=nodes)
-charlie_program = AnonymousTransmissionProgram(node_name="Charlie", node_names=nodes)
-david_program = AnonymousTransmissionProgram(node_name="David", node_names=nodes)
+alice_program = AnonymousTransmissionProgram(node_name="Alice", node_names=nodes, send_bit=True) #repetition_code=True)
+bob_program = AnonymousTransmissionProgram(node_name="Bob", node_names=nodes, repetition_code=True)
+charlie_program = AnonymousTransmissionProgram(node_name="Charlie", node_names=nodes, repetition_code=True)
+david_program = AnonymousTransmissionProgram(node_name="David", node_names=nodes, repetition_code=True)
 
-# Run the simulation. Programs argument is a mapping of network node labels to programs to run on that node
-run(config=cfg, programs={"Alice": alice_program, "Bob": bob_program,
-                          "Charlie": charlie_program, "David": david_program}, num_times=1)
+num_times = 1
+for i in range(num_times):
+    # Run the simulation. Programs argument is a mapping of network node labels to programs to run on that node
+    run(config=cfg, programs={"Alice": alice_program, "Bob": bob_program,
+                              "Charlie": charlie_program, "David": david_program}, num_times=1)
+    results = [alice_program.final, bob_program.final, charlie_program.final, david_program.final]
+
+    total_matches = 0
+    byte_success_percentages = []
+    reference = results[0]
+    byte_success = []
+    for j in range(1, len(results)):
+        correct_bits = sum(1 for k in range(8) if results[j][k] != reference[k])
+        byte_success.append(correct_bits)
+    average_success_rate = 8 - mean(byte_success)
+
+    sim_times = [alice_program.simtime, bob_program.simtime, charlie_program.simtime, david_program.simtime]
+    print(f"Average success rate: {average_success_rate} and Average Transmission Speed: {mean(sim_times)}")
+
+    with open(log_file, "a") as f:  # Open the file in append mode
+        f.write(
+            f"Average success rate: {average_success_rate} and Average Transmission Speed: {mean(sim_times)}\n")
+
+
+
