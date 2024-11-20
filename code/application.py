@@ -8,6 +8,7 @@ from netqasm.sdk.toolbox import set_qubit_state
 from netqasm.sdk.qubit import QubitMeasureBasis
 import random
 
+from numpy.distutils.conv_template import header
 from squidasm.sim.stack.program import Program, ProgramContext, ProgramMeta
 from netqasm.sdk.classical_communication.socket import Socket
 from netqasm.sdk.epr_socket import EPRSocket
@@ -113,32 +114,46 @@ class AnonymousTransmissionProgram(Program):
             yield from connection.flush()
 
             #broadcast
-            msg = StructuredMessage(str(i), "")
-
-            if self.prev_socket is not None:
-                msg = yield from self.prev_socket.recv()
-                if str(i) not in msg.header:
-                    while True:
-                        msg = yield from self.prev_socket.recv()
-                        if str(i) in msg.header:
-                            break
-
-            msg_str = str(msg.payload) + str(src)
-
             if repetition_code:
-                _, msg_str = self.repetition_code_func(msg.payload, src)
-                if self.next_socket is not None:
-                    self.broadcast_message(context, StructuredMessage(str(i), msg_str))
+                self.broadcast_message(context, str(src))
+                if self.prev_socket is not None:
+                    msg1 = yield from self.prev_socket.recv()
+                    self.broadcast_message(context, str(src))
+                    msg2 = yield from self.prev_socket.recv()
+                    self.broadcast_message(context, str(src))
+                    msg3 = yield from self.prev_socket.recv()
+                    msg_str = str(src)+str(src)+str(src)+ msg1 + msg2 + msg3
+                    c_str = self.repetition_code_func(msg_str)
                 else:
-                    self.broadcast_message(context, StructuredMessage(str(i), ""))
+                    msg1 = yield from self.next_socket.recv()
+                    self.broadcast_message(context, str(src))
+                    msg2 = yield from self.next_socket.recv()
+                    self.broadcast_message(context, str(src))
+                    msg3 = yield from self.next_socket.recv()
+                    msg_str = str(src) + str(src) + str(src) + msg1 + msg2 + msg3
+                    c_str = self.repetition_code_func(msg_str)
 
-                self.final = self.final + self.repetition_code_func(msg)
-
+                if str(c_str).count('1') % 2 != 0:
+                    self.final = self.final + "1"
+                else:
+                    self.final = self.final + "0"
             else:
-                if self.next_socket is not None:
-                    self.broadcast_message(context, StructuredMessage(str(i), msg_str))
+                self.broadcast_message(context, str(src))
+                if self.prev_socket is not None:
+                    msg1 = yield from self.prev_socket.recv()
+                    self.broadcast_message(context, str(src))
+                    msg2 = yield from self.prev_socket.recv()
+                    self.broadcast_message(context, str(src))
+                    msg3 = yield from self.prev_socket.recv()
+                    msg_str = str(src) + msg1 + msg2 + msg3
+
                 else:
-                    self.broadcast_message(context, StructuredMessage(str(i), ""))
+                    msg1 = yield from self.next_socket.recv()
+                    self.broadcast_message(context, str(src))
+                    msg2 = yield from self.next_socket.recv()
+                    self.broadcast_message(context, str(src))
+                    msg3 = yield from self.next_socket.recv()
+                    msg_str = str(src) + msg1 + msg2+ msg3
 
                 if str(msg_str).count('1') % 2 != 0:
                     self.final = self.final + "1"
@@ -147,7 +162,7 @@ class AnonymousTransmissionProgram(Program):
 
         return self.final
 
-    def repetition_code_func(self, input_string, src = None):
+    def repetition_code_func(self, input_string):
         result_string = ""
         for i in range(0, len(input_string), 3):
             group = input_string[i:i + 3]
@@ -158,11 +173,9 @@ class AnonymousTransmissionProgram(Program):
                 result_string += "1"
             else:
                 result_string += "0"
-        if src is not None:
-            to_send = input_string + str(src) + str(src) + str(src)
-        return result_string, to_send
+        return result_string
 
-    def broadcast_message(self, context: ProgramContext, message: StructuredMessage):
+    def broadcast_message(self, context: ProgramContext, message: str):
         """Broadcasts a message to all nodes in the network."""        
         for remote_node_name in self.remote_node_names:
             socket = context.csockets[remote_node_name]
