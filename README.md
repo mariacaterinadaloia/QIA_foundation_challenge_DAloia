@@ -61,14 +61,14 @@ I firstly divided the code into 5 steps:
 > In the run method, return both the received byte (or sent byte for the sender) and the completion time.
 
 I created `application_onebit.py` and  `config_onebit.yaml` to distinguish between the one bit and one byte implementations.
-I 
+
 ### Task 3️⃣: Measure Success Probability and Transmission Speed
 > Now, calculate the average success probability and transmission speed in bytes per second.
 > You can use the num_times parameter in the run method of run_simulation.py to run multiple simulations and gather data to compute these averages.
 
-$ Average-success-probability = (\frac{bit-sended-right} {total-bits}) * 100 $
+$Average-success-probability = (\frac{bit-sended-right} {total-bits}) * 100$
 
-$ Transmission-Speed = mean(sim-times) $
+$Transmission-Speed= mean(sim-times)$
 ### Task 4️⃣: Add Error Correction with Repetition Code
 > Implement a basic form of error correction using a Repetition code of length 3. Add an option to enable error correction in your application and apply the repetition code for transmitting a single bit anonymously.
 
