@@ -67,6 +67,7 @@ I
 > You can use the num_times parameter in the run method of run_simulation.py to run multiple simulations and gather data to compute these averages.
 
 $ Average-success-probability = (\frac{bit-sended-right} {total-bits}) * 100 $
+
 $ Transmission-Speed = mean(sim-times) $
 ### Task 4️⃣: Add Error Correction with Repetition Code
 > Implement a basic form of error correction using a Repetition code of length 3. Add an option to enable error correction in your application and apply the repetition code for transmitting a single bit anonymously.
